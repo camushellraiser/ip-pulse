@@ -55,51 +55,88 @@ function deviceState(device) {
 }
 function renderSummary() {
   const onlineCount = devices.filter((device) => deviceState(device) === "online").length;
-  const targetCount = devices.length || 2;
-  const state = !serverOk ? "standby" : onlineCount === 0 ? "offline" : onlineCount < targetCount ? "partial" : "online";
-  const messages = {
-    online: ["Todos conectados", "Tus dos computadoras están enviando señales."],
-    partial: ["Conexión parcial", "Una computadora dejó de enviar señales."],
-    offline: ["Ambas desconectadas", "Ninguna computadora está enviando señales."],
-    standby: ["Estado desconocido", "No se pudo confirmar el estado de tus equipos."],
-  };
-  const [name, description] = messages[state];
+  const total = devices.length;
+  const offlineCount = devices.filter((device) => deviceState(device) === "offline").length;
+  const nas = devices.find((device) => device.device_type === "nas");
+  const nasState = nas ? deviceState(nas) : null;
+  const plexDown = nasState === "online" && nas.plex_online === false;
+  const plexUnknown = nasState === "online" && nas.plex_online == null;
+  const state = !serverOk ? "standby" : onlineCount === 0 ? "offline" :
+    (offlineCount > 0 || plexDown ? "partial" : "online");
+  let name, description;
+  if (!total) {
+    name = "Esperando dispositivos";
+    description = "Configura tus dispositivos para recibir señales.";
+  } else if (state === "standby") {
+    name = "Estado sin verificar";
+    description = "No es posible confirmar el estado actual de los dispositivos.";
+  } else if (state === "offline") {
+    name = "Todos los dispositivos desconectados";
+    description = "Ninguno está enviando señales en este momento.";
+  } else if (plexDown) {
+    name = "Plex requiere atención";
+    description = `${onlineCount} de ${total} dispositivos conectados. El NAS responde, pero Plex no.`;
+  } else if (offlineCount) {
+    name = "Algunos dispositivos desconectados";
+    description = `${onlineCount} de ${total} dispositivos conectados; ${offlineCount} sin señal.`;
+  } else {
+    name = "Todos los dispositivos conectados";
+    description = `Tus ${total} ${total === 1 ? "dispositivo está conectado y reportando" : "dispositivos están conectados y reportando"} correctamente.`;
+    if (nas && !plexUnknown && nas.plex_online === true) description += " Plex responde localmente.";
+    if (plexUnknown) description += " Estado de Plex pendiente de verificar.";
+  }
   $("#general-dot").className = `big-dot ${state}`;
-  $("#general-status").textContent = devices.length ? name : "Esperando dispositivos";
-  $("#general-description").textContent = devices.length ? description : "Configura tus dos PCs para recibir sus señales.";
-  $("#online-count").textContent = `${onlineCount} / ${targetCount} ONLINE`;
-  $("#online-progress").style.width = `${devices.length ? onlineCount / targetCount * 100 : 0}%`;
+  $("#general-status").textContent = name;
+  $("#general-description").textContent = description;
+  $("#online-count").textContent = `${onlineCount} / ${total} ONLINE`;
+  $("#online-progress").style.width = `${total ? onlineCount / total * 100 : 0}%`;
 
   const ips = [...new Set(devices.map((d) => d.public_ip).filter(Boolean))];
   $("#shared-public-ip").textContent = ips.length === 1 ? ips[0] : ips.length > 1 ? "IPs diferentes" : "—";
-  $("#router-description").textContent = ips.length > 1 ? "Verifica la conexión" : "Ambos equipos, mismo router";
-  $("#latest-change").textContent = events.length ? age(events[0].changed_at) : "—";
-  $("#latest-change-time").textContent = events.length
-    ? `Registrado ${shortDate(events[0].changed_at)}` : "Sin cambios registrados";
+  $("#router-description").textContent = ips.length > 1 ? "Se detectaron varias IPs públicas" :
+    total > 1 ? "Dispositivos en la misma red pública" : "IP pública registrada";
+  const publicEvents = events.filter((e) => e.old_public_ip && e.old_public_ip !== e.new_public_ip);
+  $("#latest-change").textContent = publicEvents.length ? age(publicEvents[0].changed_at) : "Sin cambios registrados";
+  $("#latest-change-time").textContent = publicEvents.length
+    ? `Registrado ${shortDate(publicEvents[0].changed_at)}` : "No se ha registrado un cambio de IP pública";
 }
 const computerIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
+const nasIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h10M7 12h10M7 17h5"/><circle cx="17" cy="17" r="1"/></svg>`;
+function plexStatus(device, state) {
+  if (state === "unknown" || state === "offline") return ["unknown", "SIN VERIFICAR"];
+  if (device.plex_online === true) return ["online", "ONLINE"];
+  if (device.plex_online === false) return ["offline", "OFFLINE"];
+  return ["unknown", "SIN REVISAR"];
+}
 function renderDevices() {
   const container = $("#device-grid");
   if (!devices.length) {
-    container.innerHTML = `<div class="empty-state">Aún no hay computadoras configuradas. Ejecuta el SQL de alta.</div>`;
+    container.innerHTML = `<div class="empty-state">Aún no hay dispositivos configurados. Ejecuta el SQL de alta.</div>`;
     return;
   }
   container.innerHTML = devices.map((device, index) => {
     const state = deviceState(device);
     const stateLabel = state === "online" ? "ONLINE" : state === "offline" ? "OFFLINE" : "SIN VERIFICAR";
     const lastSeen = state === "unknown" ? "Sin verificar" : age(device.last_seen);
+    const isNas = device.device_type === "nas";
     const name = escapeHTML(device.name);
     const publicIP = escapeHTML(ipText(device.public_ip));
     const localIP = escapeHTML(ipText(device.local_ip));
+    const [plexState, plexLabel] = plexStatus(device, state);
+    const plexSection = isNas ? `<div class="service-health">
+      <div class="service-title"><span class="plex-mark">▶</span><div><strong>PLEX MEDIA SERVER</strong><small>${state === "offline" ? "NAS sin señal: no es posible comprobar Plex" : "Disponibilidad local del servicio"}</small></div></div>
+      <span class="status-pill ${plexState}">${plexLabel}</span>
+    </div>` : "";
     return `<article class="device-card is-${state}">
       <div class="device-top">
-        <div class="device-identity"><div class="computer-symbol">${computerIcon}</div><div><h3>${name}</h3><span>EQUIPO 0${index + 1} · WINDOWS</span></div></div>
+        <div class="device-identity"><div class="computer-symbol">${isNas ? nasIcon : computerIcon}</div><div><h3>${name}</h3><span>${isNas ? "ALMACENAMIENTO EN RED · SYNOLOGY DSM" : "COMPUTADORA · WINDOWS"}</span></div></div>
         <span class="status-pill ${state}">${stateLabel}</span>
       </div><div class="card-divider"></div>
       <div class="device-ips">
         <div><span class="ip-label">IP PÚBLICA</span><div class="ip-value-wrap"><span class="ip-value">${publicIP}</span><button class="copy-btn" data-ip="${escapeHTML(device.public_ip || '')}" ${device.public_ip ? '' : 'disabled'} title="Copiar IP pública">⧉</button></div></div>
         <div><span class="ip-label">IP PRIVADA (LAN)</span><div class="ip-value-wrap"><span class="ip-value">${localIP}</span><button class="copy-btn" data-ip="${escapeHTML(device.local_ip || '')}" ${device.local_ip ? '' : 'disabled'} title="Copiar IP local">⧉</button></div></div>
-      </div><div class="device-bottom"><span>ÚLTIMA SEÑAL</span><strong class="${state === 'offline' ? 'offline-txt' : ''}">${escapeHTML(lastSeen)}</strong></div>
+      </div>${plexSection}
+      <div class="device-bottom"><span>ÚLTIMA SEÑAL</span><strong class="${state === 'offline' ? 'offline-txt' : ''}">${escapeHTML(lastSeen)}</strong></div>
     </article>`;
   }).join("");
 }
@@ -134,7 +171,7 @@ async function loadData() {
   try {
     if (!navigator.onLine) throw new Error("Sin conexión a Internet");
     const [deviceResp, historyResp] = await Promise.all([
-      client.from("devices").select("id,name,public_ip,local_ip,last_seen,ip_changed_at").order("id"),
+      client.from("devices").select("id,name,device_type,public_ip,local_ip,last_seen,ip_changed_at,plex_online,plex_checked_at").order("id"),
       client.from("ip_history").select("id,device_id,old_public_ip,new_public_ip,old_local_ip,new_local_ip,changed_at").order("changed_at", {ascending:false}).limit(30),
     ]);
     if (deviceResp.error) throw deviceResp.error;
