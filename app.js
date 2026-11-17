@@ -81,7 +81,7 @@ function renderSummary() {
     description = `${onlineCount} de ${total} dispositivos conectados; ${offlineCount} sin señal.`;
   } else {
     name = "Todos los dispositivos conectados";
-    description = `${onlineCount} de ${total} dispositivos están enviando señales correctamente.`;
+    description = `Tus ${total} ${total === 1 ? "dispositivo está conectado y reportando" : "dispositivos están conectados y reportando"} correctamente.`;
     if (nas && !plexUnknown && nas.plex_online === true) description += " Plex responde localmente.";
     if (plexUnknown) description += " Estado de Plex pendiente de verificar.";
   }
