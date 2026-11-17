@@ -26,7 +26,7 @@
     <header class="topbar">
       <a class="brand" href="#" aria-label="IP Pulse inicio">
         <span class="brand-mark"><svg viewBox="0 0 32 32" fill="none"><path d="M3 17h7l4-10 5 19 4-10h6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span>IP<span class="brand-light">PULSE</span><small>NETWORK INTELLIGENCE</small></span>
+        <span>IP<span class="brand-light">PULSE</span><small>MONITOREO DE RED</small></span>
       </a>
       <div class="top-actions">
         <span class="realtime-indicator" id="connection-indicator"><i></i><span id="connection-text">Conectando</span></span>
@@ -38,8 +38,8 @@
       <div class="login-decoration"><div class="radar"><span></span><span></span><span></span><i>⌁</i></div></div>
       <div class="login-panel">
         <span class="eyebrow"><span class="eyebrow-line"></span> ACCESO PRIVADO</span>
-        <h1>Todo tu equipo.<br /><em>En un solo lugar.</em></h1>
-        <p>Supervisa tus computadoras, Synology NAS y Plex desde donde estés.</p>
+        <h1>Todos tus dispositivos.<br /><em>En un solo lugar.</em></h1>
+        <p>Supervisa tus computadoras, tu NAS Synology y Plex desde cualquier lugar.</p>
         <form id="login-form">
           <label for="email">Correo electrónico</label>
           <input type="email" id="email" autocomplete="email" placeholder="tu@email.com" required />
@@ -55,8 +55,8 @@
       <div class="dashboard-heading">
         <div>
           <span class="eyebrow"><span class="eyebrow-line"></span> PANEL DE CONTROL</span>
-          <h1>Tu red, <em>bajo control.</em></h1>
-          <p>Monitoreo automático de tus equipos, desde cualquier lugar.</p>
+          <h1>Tu infraestructura, <em>bajo control.</em></h1>
+          <p>Monitoreo automático de tus computadoras, NAS Synology y Plex, desde cualquier lugar.</p>
         </div>
         <div class="dashboard-clock"><div id="today">—</div><strong id="clock">--:--:--</strong><small>HORA LOCAL</small></div>
       </div>
@@ -67,30 +67,30 @@
         <div class="overview-card hero-stat">
           <div class="card-meta"><span>ESTADO GENERAL</span><span class="mini-icon">◉</span></div>
           <div class="overview-main"><span id="general-dot" class="big-dot standby"></span><strong id="general-status">Esperando datos</strong></div>
-          <p id="general-description">Comprobando señales de los equipos…</p>
+          <p id="general-description">Comprobando el estado de tus dispositivos…</p>
           <div class="meter"><span id="online-progress"></span></div>
           <div class="hero-stat-footer"><span id="online-count">— ONLINE</span><span>ACTUALIZACIÓN CONTINUA</span></div>
         </div>
         <div class="overview-card">
-          <div class="card-meta"><span>IP PÚBLICA / ROUTER</span><span class="mini-icon">◎</span></div>
+          <div class="card-meta"><span>IP PÚBLICA DE TU RED</span><span class="mini-icon">◎</span></div>
           <div class="stat-value mono" id="shared-public-ip">—</div>
           <div class="stat-foot">IP de salida a Internet</div>
           <div class="stat-tag">↗ <span id="router-description">Red compartida</span></div>
         </div>
         <div class="overview-card">
-          <div class="card-meta"><span>ÚLTIMO CAMBIO DE IP</span><span class="mini-icon">↗</span></div>
+          <div class="card-meta"><span>ÚLTIMO CAMBIO DE IP PÚBLICA</span><span class="mini-icon">↗</span></div>
           <div class="stat-value" id="latest-change">—</div>
           <div class="stat-foot" id="latest-change-time">Sin cambios registrados</div>
-          <div class="stat-tag secondary">⟳ HISTORIAL AUTOMÁTICO</div>
+          <div class="stat-tag secondary">⟳ HISTORIAL DE CAMBIOS DE IP</div>
         </div>
       </div>
 
-      <div class="section-title-row"><div><span class="section-kicker">01 / DEVICES</span><h2>Tus dispositivos</h2></div><div class="caption-live"><span class="pulse"></span> Señales cada 5 segundos</div></div>
+      <div class="section-title-row"><div><span class="section-kicker">01 / DISPOSITIVOS</span><h2>Tus dispositivos</h2></div><div class="caption-live"><span class="pulse"></span> Monitoreo cada 5 segundos</div></div>
       <div class="device-grid" id="device-grid"></div>
 
-      <div class="section-title-row history-heading"><div><span class="section-kicker">02 / ACTIVITY LOG</span><h2>Historial de cambios</h2></div><span class="muted-caption">Últimos 30 eventos</span></div>
+      <div class="section-title-row history-heading"><div><span class="section-kicker">02 / HISTORIAL</span><h2>Historial de cambios</h2></div><span class="muted-caption">Últimos 30 eventos</span></div>
       <div class="history-panel"><div class="history-list" id="history-list"></div></div>
-      <footer><span>◈ IP PULSE <span class="footer-faint">/ PRIVADO Y PROTEGIDO</span></span><span>El estado OFFLINE se declara a los 20 segundos sin señal.</span></footer>
+      <footer><span>◈ IP PULSE <span class="footer-faint">/ PRIVADO Y PROTEGIDO</span></span><span>Un dispositivo figura OFFLINE tras 20 segundos sin señal.</span></footer>
     </section>
   </main>
 </body>

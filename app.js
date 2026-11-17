@@ -55,34 +55,50 @@ function deviceState(device) {
 }
 function renderSummary() {
   const onlineCount = devices.filter((device) => deviceState(device) === "online").length;
-  const targetCount = devices.length || 2;
-  const offlineCount = targetCount - onlineCount;
+  const total = devices.length;
+  const offlineCount = devices.filter((device) => deviceState(device) === "offline").length;
   const nas = devices.find((device) => device.device_type === "nas");
-  const plexDown = !!nas && deviceState(nas) === "online" && nas.plex_online === false;
+  const nasState = nas ? deviceState(nas) : null;
+  const plexDown = nasState === "online" && nas.plex_online === false;
+  const plexUnknown = nasState === "online" && nas.plex_online == null;
   const state = !serverOk ? "standby" : onlineCount === 0 ? "offline" :
     (offlineCount > 0 || plexDown ? "partial" : "online");
-  const messages = {
-    online: ["Todos conectados", nas ? "Computadoras, NAS y Plex funcionando." : "Tus dos computadoras están enviando señales."],
-    partial: [plexDown && !offlineCount ? "Plex requiere atención" : "Conexión parcial",
-      plexDown ? (offlineCount ? `Hay ${offlineCount} dispositivos sin señal y Plex no responde.` :
-      "El NAS está encendido, pero Plex no responde.") : `${offlineCount} equipo(s) dejaron de enviar señales.`],
-    offline: ["Todos desconectados", "Ningún dispositivo está enviando señales."],
-    standby: ["Estado desconocido", "No se pudo confirmar el estado de tus equipos."],
-  };
-  const [name, description] = messages[state];
+  let name, description;
+  if (!total) {
+    name = "Esperando dispositivos";
+    description = "Configura tus dispositivos para recibir señales.";
+  } else if (state === "standby") {
+    name = "Estado sin verificar";
+    description = "No es posible confirmar el estado actual de los dispositivos.";
+  } else if (state === "offline") {
+    name = "Todos los dispositivos desconectados";
+    description = "Ninguno está enviando señales en este momento.";
+  } else if (plexDown) {
+    name = "Plex requiere atención";
+    description = `${onlineCount} de ${total} dispositivos conectados. El NAS responde, pero Plex no.`;
+  } else if (offlineCount) {
+    name = "Algunos dispositivos desconectados";
+    description = `${onlineCount} de ${total} dispositivos conectados; ${offlineCount} sin señal.`;
+  } else {
+    name = "Todos los dispositivos conectados";
+    description = `${onlineCount} de ${total} dispositivos están enviando señales correctamente.`;
+    if (nas && !plexUnknown && nas.plex_online === true) description += " Plex responde localmente.";
+    if (plexUnknown) description += " Estado de Plex pendiente de verificar.";
+  }
   $("#general-dot").className = `big-dot ${state}`;
-  $("#general-status").textContent = devices.length ? name : "Esperando dispositivos";
-  $("#general-description").textContent = devices.length ? description : "Configura tus dispositivos para recibir señales.";
-  $("#online-count").textContent = `${onlineCount} / ${targetCount} ONLINE`;
-  $("#online-progress").style.width = `${devices.length ? onlineCount / targetCount * 100 : 0}%`;
+  $("#general-status").textContent = name;
+  $("#general-description").textContent = description;
+  $("#online-count").textContent = `${onlineCount} / ${total} ONLINE`;
+  $("#online-progress").style.width = `${total ? onlineCount / total * 100 : 0}%`;
 
   const ips = [...new Set(devices.map((d) => d.public_ip).filter(Boolean))];
   $("#shared-public-ip").textContent = ips.length === 1 ? ips[0] : ips.length > 1 ? "IPs diferentes" : "—";
-  $("#router-description").textContent = ips.length > 1 ? "Verifica la conexión" :
-    nas ? "Red compartida · PCs y NAS" : "Ambos equipos, mismo router";
-  $("#latest-change").textContent = events.length ? age(events[0].changed_at) : "—";
-  $("#latest-change-time").textContent = events.length
-    ? `Registrado ${shortDate(events[0].changed_at)}` : "Sin cambios registrados";
+  $("#router-description").textContent = ips.length > 1 ? "Se detectaron varias IPs públicas" :
+    total > 1 ? "Dispositivos en la misma red pública" : "IP pública registrada";
+  const publicEvents = events.filter((e) => e.old_public_ip && e.old_public_ip !== e.new_public_ip);
+  $("#latest-change").textContent = publicEvents.length ? age(publicEvents[0].changed_at) : "Sin cambios registrados";
+  $("#latest-change-time").textContent = publicEvents.length
+    ? `Registrado ${shortDate(publicEvents[0].changed_at)}` : "No se ha registrado un cambio de IP pública";
 }
 const computerIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
 const nasIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h10M7 12h10M7 17h5"/><circle cx="17" cy="17" r="1"/></svg>`;
@@ -113,7 +129,7 @@ function renderDevices() {
     </div>` : "";
     return `<article class="device-card is-${state}">
       <div class="device-top">
-        <div class="device-identity"><div class="computer-symbol">${isNas ? nasIcon : computerIcon}</div><div><h3>${name}</h3><span>${isNas ? "SYNOLOGY NAS" : `EQUIPO 0${index + 1} · WINDOWS`}</span></div></div>
+        <div class="device-identity"><div class="computer-symbol">${isNas ? nasIcon : computerIcon}</div><div><h3>${name}</h3><span>${isNas ? "ALMACENAMIENTO EN RED · SYNOLOGY DSM" : "COMPUTADORA · WINDOWS"}</span></div></div>
         <span class="status-pill ${state}">${stateLabel}</span>
       </div><div class="card-divider"></div>
       <div class="device-ips">
