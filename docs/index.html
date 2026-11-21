@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261117-3" />
+  <link rel="stylesheet" href="styles.css?v=20261120-signature" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
   <script src="config.js" defer></script>
   <script src="app.js?v=20261117-3" defer></script>
@@ -90,7 +90,18 @@
 
       <div class="section-title-row history-heading"><div><span class="section-kicker">02 / HISTORIAL</span><h2>Historial de cambios</h2></div><span class="muted-caption">Últimos 30 eventos</span></div>
       <div class="history-panel"><div class="history-list" id="history-list"></div></div>
-      <footer><span>◈ IP PULSE <span class="footer-faint">/ PRIVADO Y PROTEGIDO</span></span><span>Un dispositivo figura OFFLINE tras 20 segundos sin señal.</span></footer>
+      <footer class="dashboard-footer">
+        <div class="footer-information"><span>◈ IP PULSE <span class="footer-faint">/ PRIVADO Y PROTEGIDO</span></span><span class="footer-status-note">Un dispositivo figura OFFLINE tras 20 segundos sin señal.</span></div>
+        <div class="author-signature" aria-label="Developed by Aldo Lizares">
+          <span class="author-monogram" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5.5 22.5 12.1 9l6.6 13.5M8.3 17.4h7.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21.3 9v13.5h6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="author-credit"><span class="author-prefix">Developed by</span><span class="author-name">Aldo Lizares</span></span>
+        </div>
+      </footer>
     </section>
   </main>
 </body>
